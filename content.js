@@ -24,7 +24,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           row.style.backgroundColor = '#fff59d';
           row.style.transition = 'background 0.5s';
         }
-        simulateClick(viewLink);
+        // Extract and execute the JS function from the href if present
+        const href = viewLink.getAttribute('href');
+        if (href && href.startsWith('javascript:')) {
+          const jsCode = href.replace(/^javascript:/i, '');
+          eval(jsCode);
+        } else {
+          simulateClick(viewLink);
+        }
         setTimeout(() => {
           const agreeBtn = Array.from(document.querySelectorAll('a,button')).find(el =>
             el.textContent.replace(/\s+/g, ' ').trim().toLowerCase().includes('agree to review')
