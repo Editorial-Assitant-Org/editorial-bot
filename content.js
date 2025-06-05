@@ -28,7 +28,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const href = viewLink.getAttribute('href');
         if (href && href.startsWith('javascript:')) {
           const jsCode = href.replace(/^javascript:/i, '');
-          eval(jsCode);
+          const script = document.createElement('script');
+          script.textContent = jsCode;
+          document.documentElement.appendChild(script);
+          script.remove();
         } else {
           simulateClick(viewLink);
         }
