@@ -14,7 +14,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       // Try to find the first link that includes "View Submission"
       const viewLink = allLinks.find(a =>
-        a.textContent.replace(/\s+/g, ' ').trim().toLowerCase().includes('view submission')
+        a.textContent.replace(/[\s\u00A0]+/g, ' ').trim().toLowerCase().includes('view submission')
       );
 
       if (viewLink) {
