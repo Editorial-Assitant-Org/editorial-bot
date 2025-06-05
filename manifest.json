@@ -16,9 +16,6 @@
   "128": "icon16.png"
 }
   },
-  "background": {
-    "service_worker": "background.js"
-  },
   "content_scripts": [
     {
       "matches": ["https://www.editorialmanager.com/*"],
