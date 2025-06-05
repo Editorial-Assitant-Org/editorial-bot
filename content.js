@@ -1,3 +1,9 @@
+function simulateClick(element) {
+  const evt = document.createEvent('MouseEvents');
+  evt.initEvent('click', true, true);
+  element.dispatchEvent(evt);
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'runEditorialBot') {
     try {
@@ -18,13 +24,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           row.style.backgroundColor = '#fff59d';
           row.style.transition = 'background 0.5s';
         }
-        viewLink.click();
+        simulateClick(viewLink);
         setTimeout(() => {
           const agreeBtn = Array.from(document.querySelectorAll('a,button')).find(el =>
             el.textContent.replace(/\s+/g, ' ').trim().toLowerCase().includes('agree to review')
           );
           if (agreeBtn) {
-            agreeBtn.click();
+            simulateClick(agreeBtn);
             setTimeout(() => {
               window.history.back();
               setTimeout(() => {
