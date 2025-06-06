@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.pyc
+downloaded_submission.pdf
+frame_*.html
+new_reviewer_invitations_error.png
+view_submission_error.png
+agree_to_review_error.png
+reclick_new_reviewer_invitations_error.png
