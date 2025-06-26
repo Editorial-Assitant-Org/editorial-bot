@@ -15,20 +15,15 @@ document.addEventListener('DOMContentLoaded', () => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const activeTab = tabs[0];
     if (activeTab.url && activeTab.url.includes('mail.google.com')) {
-      // If on Gmail, send a message to the content script to get fresh data
       chrome.tabs.sendMessage(activeTab.id, { action: 'extractEmailData' }, (response) => {
         if (chrome.runtime.lastError) {
-          // Error communicating, do nothing and rely on stored data
           console.log('Could not establish connection. Using stored data.');
           return;
         }
         if (response) {
-          // Update the textareas with the new data
           manuscriptTextarea.value = response.manuscript || 'Not found';
           editorTextarea.value = response.editor || 'Not found';
           decisionTextarea.value = response.decision || 'Not found';
-
-          // Save the new data to storage
           chrome.storage.local.set({
             manuscript: response.manuscript,
             editor: response.editor,
@@ -39,22 +34,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 3. Set up copy buttons (this works independently)
+  // 3. Set up copy buttons
   const copyButtons = document.querySelectorAll('.copy-btn');
   copyButtons.forEach(button => {
     button.addEventListener('click', () => {
       const targetId = button.getAttribute('data-target');
       const targetTextarea = document.getElementById(targetId);
-
       targetTextarea.select();
       document.execCommand('copy');
-
       window.getSelection().removeAllRanges();
-
       copyStatus.textContent = `Copied ${targetId}!`;
-      setTimeout(() => {
-        copyStatus.textContent = '';
-      }, 2000);
+      setTimeout(() => { copyStatus.textContent = ''; }, 2000);
     });
+  });
+
+  // 4. Set up the Paste button
+  const pasteButton = document.getElementById('paste-decision-btn');
+  pasteButton.addEventListener('click', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      decisionTextarea.value = text;
+      // Save the pasted decision to storage
+      chrome.storage.local.get(['manuscript', 'editor'], (result) => {
+        chrome.storage.local.set({
+          manuscript: result.manuscript,
+          editor: result.editor,
+          decision: text
+        });
+      });
+      copyStatus.textContent = 'Pasted decision!';
+      setTimeout(() => { copyStatus.textContent = ''; }, 2000);
+    } catch (err) {
+      console.error('Failed to read clipboard contents: ', err);
+      copyStatus.textContent = 'Paste failed!';
+      setTimeout(() => { copyStatus.textContent = ''; }, 2000);
+    }
   });
 });

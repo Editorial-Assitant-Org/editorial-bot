@@ -21,27 +21,70 @@ function extractDataFromEmail() {
     }
   }
 
-  // 2. Find the Editor/Sender from the 'from' field
-  const senderElement = document.querySelector('span.gD');
-  if (senderElement) {
-    editor = senderElement.innerText.trim();
-  } else {
-    const senderElementFallback = document.querySelector('span[email]');
-    if (senderElementFallback) {
-        editor = senderElementFallback.innerText.trim();
-    }
-  }
+  // Find all individual email messages in the thread
+  const messageElements = document.querySelectorAll('.gs');
+  
+  if (messageElements.length > 0) {
+    // Get the last message in the thread, which is the one we care about
+    const latestMessage = messageElements[messageElements.length - 1];
 
-  // 3. The decision is the entire body of the email.
-  const emailBody = document.querySelector('.a3s.aiL, .a3s.aXjCH'); // Common selector for email body in Gmail
-  if (emailBody) {
-    decision = emailBody.innerText.trim();
-  } else {
-    // A fallback for different Gmail structures or if the main one fails.
-    const fallbackBody = document.querySelector('div.adn.ads');
-    if(fallbackBody) {
-        decision = fallbackBody.innerText.trim();
+    // 2. Find the Editor/Sender from within the last message block, skipping any sender fields that say 'me'
+    const senderCandidates = Array.from(latestMessage.querySelectorAll('span.gD[email], span[email]'));
+    let foundEditor = '';
+    for (const el of senderCandidates) {
+      const name = el.innerText.trim();
+      if (name.toLowerCase() !== 'me' && name.length > 0) {
+        // Format as 'Lastname, Firstname' if possible, but avoid double commas
+        if (name.includes(',')) {
+          foundEditor = name;
+        } else {
+          const nameParts = name.split(' ').filter(part => part);
+          if (nameParts.length >= 2) {
+            const lastName = nameParts[nameParts.length - 1];
+            const firstName = nameParts.slice(0, nameParts.length - 1).join(' ');
+            foundEditor = `${lastName}, ${firstName}`;
+          } else {
+            foundEditor = name;
+          }
+        }
+        // Remove any extra whitespace or trailing commas
+        foundEditor = foundEditor.replace(/,+/g, ',').replace(/^,|,$/g, '').trim();
+        break;
+      }
     }
+    editor = foundEditor;
+
+    // 3. The decision is the body of the last message.
+    const bodyElement = latestMessage.querySelector('.a3s.aiL, .a3s.aXjCH, div.adn.ads');
+    if (bodyElement) {
+      let fullText = bodyElement.innerText.trim();
+      // Remove quoted previous email blocks
+      const quotedHeaderRegex = /\n\s*(From:|Sent:|To:|Subject:).*/is;
+      const match = fullText.match(quotedHeaderRegex);
+      if (match && match.index > 0) {
+        decision = fullText.substring(0, match.index).trim();
+      } else {
+        decision = fullText;
+      }
+    }
+  } else {
+      // Fallback for simpler email views without threads
+      const senderElements = document.querySelectorAll('span.gD[email]');
+      if (senderElements.length > 0) {
+          const senderName = senderElements[0].innerText.trim();
+          const nameParts = senderName.split(' ').filter(part => part);
+          if (nameParts.length >= 2) {
+              const lastName = nameParts[nameParts.length - 1];
+              const firstName = nameParts.slice(0, nameParts.length - 1).join(' ');
+              editor = `${lastName}, ${firstName}`;
+          } else {
+              editor = senderName;
+          }
+      }
+      const bodyElement = document.querySelector('.a3s.aiL, .a3s.aXjCH, div.adn.ads');
+      if (bodyElement) {
+          decision = bodyElement.innerText.trim();
+      }
   }
 
   return { manuscript, editor, decision };

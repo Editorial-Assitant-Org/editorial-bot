@@ -5,7 +5,8 @@
   "description": "Extracts manuscript details from emails and copies them to the clipboard.",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "clipboardRead"
   ],
   "host_permissions": [
     "https://mail.google.com/*"
