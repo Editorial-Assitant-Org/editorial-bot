@@ -1,25 +1,32 @@
 {
   "manifest_version": 3,
-  "name": "editorial-bot",
-  "version": "1.0",
-  "description": "Automates reviewer actions on Editorial Manager.",
-  "permissions": ["scripting", "activeTab"],
+  "name": "Editorial Assistant",
+  "version": "1.1",
+  "description": "Extracts manuscript details from emails and copies them to the clipboard.",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
   "host_permissions": [
-    "https://www.editorialmanager.com/*"
+    "https://mail.google.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-  "16": "icon16.png",
-  "32": "icon16.png",
-  "48": "icon16.png",
-  "128": "icon16.png"
-}
+      "16": "icon16.png",
+      "32": "icon16.png",
+      "48": "icon16.png",
+      "128": "icon16.png"
+    }
   },
   "content_scripts": [
     {
-      "matches": ["https://www.editorialmanager.com/*"],
-      "js": ["content.js"],
+      "matches": [
+        "https://mail.google.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
       "all_frames": true
     }
   ]
