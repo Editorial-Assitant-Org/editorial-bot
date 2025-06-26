@@ -1,26 +1,38 @@
-# editorial-bot
+# Editorial Assistant Extension
 
-An Edge extension that automates reviewer actions on Editorial Manager® journal platforms.
+A Chrome/Edge extension to streamline editorial workflows by extracting manuscript details, editor names, and decision content from Gmail emails and making them easily available for copying and pasting into Editorial Manager® or similar platforms.
 
+## Features
+- Extracts **Manuscript ID**, **Editor**, and **Decision** from Gmail emails automatically.
+- Remembers extracted data so you can access it on other pages (e.g., Editorial Manager).
+- Lets you copy each field with a single click.
+- Provides a **Paste** button for the Decision field (for pasting text copied from Word documents or other sources).
+- Designed for editors and reviewers to quickly transfer decision text and metadata between Gmail and editorial systems.
 
 ## Installation
 1. Clone or download this repository to your computer.
-2. Open Microsoft Edge and go to `edge://extensions/`.
-3. Enable **Developer mode** (toggle in the bottom left).
+2. Open Chrome or Edge and go to `chrome://extensions/` or `edge://extensions/`.
+3. Enable **Developer mode** (toggle in the top right or bottom left).
 4. Click **Load unpacked** and select the `editorial-bot` folder.
-5. The extension icon will appear in your Edge toolbar.
+5. The extension icon will appear in your browser toolbar.
 
 ## Usage
-1. Navigate to any Editorial Manager page where you have reviewer invitations.
-2. Click the "editorial-bot" icon in your Edge toolbar.
-3. In the popup, click **Run Editorial Bot**.
-4. The extension will highlight the first row, click "View Submission," then "Agree to Review," and refresh the page.
+### Extracting from Gmail
+1. Open a relevant email in Gmail (the extension works best with single emails, not conversation view).
+2. Click the extension icon.
+3. The popup will auto-populate the **Manuscript**, **Editor**, and **Decision** fields.
+   - **Decision** is the body of the email, excluding any quoted previous messages.
+   - **Editor** is the sender of the email, formatted as `Lastname, Firstname`.
+4. Click **Copy** next to any field to copy its contents.
+
+### Pasting Decision from Word Documents
+1. Copy the decision text from your Word document (Ctrl+C).
+2. Open the extension popup and click **Paste** next to the Decision field.
+3. The pasted text is saved and can be copied as needed.
+
+### Using on Editorial Manager
+1. Navigate to the Editorial Manager page where you need to paste the details.
+2. Open the extension popup—the last extracted or pasted data will be available.
+3. Use the **Copy** buttons to transfer data into Editorial Manager fields.
 
 
-## Notes
-- The extension acts on the first available invitation row by default.
-- You can customize selectors in `content.js` if your Editorial Manager instance has a different layout.
-
----
-
-This project is not affiliated with Editorial Manager® or Aries Systems Corporation. For personal workflow automation only.
