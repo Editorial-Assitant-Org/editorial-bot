@@ -66,6 +66,24 @@ function extractDataFromEmail() {
       } else {
         decision = fullText;
       }
+      // Remove common disclaimers/footers
+      if (decision) {
+        // List of patterns that indicate start of disclaimer/footer
+        const disclaimerPatterns = [
+          /\n?={5,}.*/i, // lines of ====
+          /Please note that this e-mail[\s\S]*/i,
+          /Disclaimer ID:[\s\S]*/i,
+          /This message and any attachment[\s\S]*/i,
+          /This email and any files transmitted[\s\S]*/i,
+          /The information contained in this email[\s\S]*/i
+        ];
+        for (const pattern of disclaimerPatterns) {
+          const m = decision.match(pattern);
+          if (m && m.index >= 0) {
+            decision = decision.substring(0, m.index).trim();
+          }
+        }
+      }
     }
   } else {
       // Fallback for simpler email views without threads
