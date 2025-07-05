@@ -1,9 +1,26 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'extractEmailData') {
     const data = extractDataFromEmail();
-    sendResponse(data);
+    // sendResponse may throw "Extension context invalidated" if the popup/extension was closed
+    try {
+      if (chrome.runtime?.id) {
+        sendResponse(data);
+      }
+    } catch (e) {
+      console.warn('Editorial Assistant: unable to send email data response –', e.message);
+    }
+  } else if (request.action === 'extractAssignmentData') {
+    const data = extractAssignmentData();
+    try {
+      if (chrome.runtime?.id) {
+        sendResponse(data);
+      }
+    } catch (e) {
+      console.warn('Editorial Assistant: unable to send assignment data response –', e.message);
+    }
   }
-  return true; // Keep the message channel open for asynchronous response
+  // All responses above are synchronous, so no need to keep the channel open.
+  return false;
 });
 
 function extractDataFromEmail() {
@@ -106,4 +123,75 @@ function extractDataFromEmail() {
   }
 
   return { manuscript, editor, decision };
+}
+
+function extractAssignmentData(rootDoc = document) {
+  console.log('Editorial Assistant: extracting assignments in doc', rootDoc === document ? 'top' : 'iframe');
+  const emailHeaders = [];
+  let targetTable = null;
+
+  const tables = rootDoc.querySelectorAll('table');
+
+  const normalize = text => text.replace(/\s+/g, ' ').replace(/▲|▼/g, '').trim().toLowerCase();
+
+  console.log('Editorial Assistant: tables found', tables.length);
+  tables.forEach(table => {
+    const firstRow = table.querySelector('tr');
+    if (!firstRow) return;
+    const headerTexts = Array.from(firstRow.querySelectorAll('th, td'))
+                             .map(cell => normalize(cell.textContent));
+
+    const hasManuscript = headerTexts.some(h => h.startsWith('manuscript number') || h.startsWith('manuscript'));
+    const hasDue = headerTexts.some(h => /review\s*due/.test(h) || h.includes('datereviewdue') || h.includes('reviewdue'));
+
+    if (hasManuscript && hasDue) {
+      console.log('Editorial Assistant: target table located');
+      targetTable = table;
+    }
+  });
+
+  if (!targetTable) {
+    // Search inside same-origin iframes (e.g., reviewer_current.asp)
+    const iframes = rootDoc.querySelectorAll('iframe');
+    for (const frame of iframes) {
+      try {
+        const innerDoc = frame.contentDocument || frame.contentWindow.document;
+        if (!innerDoc) continue;
+        const result = extractAssignmentData(innerDoc);
+        emailHeaders.push(...result.emailHeaders);
+        if (emailHeaders.length) return { emailHeaders };
+      } catch (e) {
+        // cross-origin or inaccessible
+        continue;
+      }
+    }
+  }
+
+  if (targetTable) {
+    // Re-read headers from the found table to get correct indices
+    const headerCells = Array.from(targetTable.querySelector('tr').querySelectorAll('th, td'));
+    const headers = headerCells.map(cell => normalize(cell.textContent));
+
+    const manuscriptColIndex = headers.findIndex(h => h.startsWith('manuscript number') || h.startsWith('manuscript'));
+    const dueDateColIndex = headers.findIndex(h => /review\s*due/.test(h) || h.includes('datereviewdue') || h.includes('reviewdue'));
+
+    console.log('Editorial Assistant: manuscriptCol', manuscriptColIndex, 'dueCol', dueDateColIndex);
+    if (manuscriptColIndex > -1 && dueDateColIndex > -1) {
+        const rows = Array.from(targetTable.querySelectorAll('tr')).slice(1); // skip header row
+        rows.forEach(row => {
+          const cells = row.querySelectorAll('td');
+          if (cells.length > manuscriptColIndex && cells.length > dueDateColIndex) {
+            const manuscriptNumber = cells[manuscriptColIndex].textContent.trim();
+            const dateReviewDue = cells[dueDateColIndex].textContent.trim();
+
+            if (manuscriptNumber && dateReviewDue) {
+              emailHeaders.push(`${manuscriptNumber} DUE ${dateReviewDue}`);
+              console.log('Editorial Assistant: row added', manuscriptNumber, dateReviewDue);
+            }
+          }
+        });
+    }
+  }
+
+  return { emailHeaders };
 }

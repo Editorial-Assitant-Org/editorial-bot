@@ -6,10 +6,12 @@
   "permissions": [
     "activeTab",
     "storage",
-    "clipboardRead"
+    "clipboardRead",
+    "scripting"
   ],
   "host_permissions": [
-    "https://mail.google.com/*"
+    "https://mail.google.com/*",
+    "*://*.editorialmanager.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -23,7 +25,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://mail.google.com/*"
+        "https://mail.google.com/*",
+        "*://*.editorialmanager.com/*"
       ],
       "js": [
         "content.js"
